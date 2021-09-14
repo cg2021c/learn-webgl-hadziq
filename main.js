@@ -12,7 +12,10 @@ function main() {
     var vertices = [
         -0.5, -0.5, 1.0, 0.0, 0.0,    // Point A
          0.5, -0.5, 0.0, 1.0, 0.0,    // Point B
-         0.0,  0.5, 0.0, 0.0, 1.0     // Point C
+         0.5, -0.5, 0.0, 1.0, 0.0,    // Point B
+         0.0,  0.5, 0.0, 0.0, 1.0,     // Point C
+         0.0,  0.5, 0.0, 0.0, 1.0,    // Point C
+         -0.5, -0.5, 1.0, 0.0, 0.0    // Point A
     ];
 
     // Create a linked-list for storing the vertices data
@@ -89,8 +92,8 @@ function main() {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     
-    var primitive = gl.POINTS;
+    var primitive = gl.LINES;
     var offset = 0;
-    var nVertex = 3;
+    var nVertex = 6;
     gl.drawArrays(primitive, offset, nVertex);
 }
