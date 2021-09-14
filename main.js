@@ -12,8 +12,6 @@ function main() {
     var vertices = [
         -0.5, -0.5, 1.0, 0.0, 0.0,    // Point A
          0.5, -0.5, 0.0, 1.0, 0.0,    // Point B
-         0.5, -0.5, 0.0, 1.0, 0.0,    // Point B
-         0.0,  0.5, 0.0, 0.0, 1.0,     // Point C
          0.0,  0.5, 0.0, 0.0, 1.0,    // Point C
          -0.5, -0.5, 1.0, 0.0, 0.0    // Point A
     ];
@@ -92,8 +90,8 @@ function main() {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     
-    var primitive = gl.LINES;
+    var primitive = gl.LINE_STRIP;
     var offset = 0;
-    var nVertex = 6;
+    var nVertex = 4;
     gl.drawArrays(primitive, offset, nVertex);
 }
