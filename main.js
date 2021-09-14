@@ -7,12 +7,14 @@ function main() {
     /**
      * A (-0.5, -0.5), Red   (1.0, 0.0, 0.0)
      * B ( 0.5, -0.5), Green (0.0, 1.0, 0.0)
-     * C ( 0.0,  0.5), Blue  (0.0, 0.0, 1.0)
+     * C (-0.5,  0.5), Blue  (0.0, 0.0, 1.0)
+     * D ( 0.5,  0.5), White (1.0, 1.0, 1.0)
      */
     var vertices = [
         -0.5, -0.5, 1.0, 0.0, 0.0,    // Point A
          0.5, -0.5, 0.0, 1.0, 0.0,    // Point B
-         0.0,  0.5, 0.0, 0.0, 1.0     // Point C
+        -0.5,  0.5, 0.0, 0.0, 1.0,    // Point C
+         0.5,  0.5, 1.0, 1.0, 1.0     // Point D
     ];
 
     // Create a linked-list for storing the vertices data
@@ -89,8 +91,8 @@ function main() {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     
-    var primitive = gl.LINE_LOOP;
+    var primitive = gl.TRIANGLE_STRIP;
     var offset = 0;
-    var nVertex = 3;
+    var nVertex = 4;
     gl.drawArrays(primitive, offset, nVertex);
 }
