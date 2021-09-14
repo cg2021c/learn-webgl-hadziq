@@ -5,14 +5,14 @@ function main() {
 
     // Define vertices data for three points
     /**
-     * A (-0.5, -0.5)
-     * B ( 0.5, -0.5)
-     * C ( 0.0,  0.5)
+     * A (-0.5, -0.5), Red   (1.0, 0.0, 0.0)
+     * B ( 0.5, -0.5), Green (0.0, 1.0, 0.0)
+     * C ( 0.0,  0.5), Blue  (0.0, 0.0, 1.0)
      */
     var vertices = [
-        -0.5, -0.5,     // Point A
-         0.5, -0.5,     // Point B
-         0.0,  0.5      // Point C
+        -0.5, -0.5, 1.0, 0.0, 0.0,    // Point A
+         0.5, -0.5, 0.0, 1.0, 0.0,    // Point B
+         0.0,  0.5, 0.0, 0.0, 1.0     // Point C
     ];
 
     // Create a linked-list for storing the vertices data
@@ -22,16 +22,20 @@ function main() {
 
     var vertexShaderSource = `
         attribute vec2 aPosition;
+        attribute vec3 aColor;
+        varying vec3 vColor;
         void main() {
             gl_PointSize = 10.0;
-            gl_Position = vec4(aPosition, 0.0, 1.0);     // Center of the coordinate
+            gl_Position = vec4(aPosition, 0.0, 1.0);
+            vColor = aColor;
         }
     `;
 
     var fragmentShaderSource = `
-        
+        precision mediump float;
+        varying vec3 vColor;
         void main() {
-            gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);    // Yellow
+            gl_FragColor = vec4(vColor, 1.0);
         }
     `;
 
@@ -62,10 +66,27 @@ function main() {
     //  the positional values from ARRAY_BUFFER
     //  to each vertex being processed
     var aPosition = gl.getAttribLocation(shaderProgram, "aPosition");
-    gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(
+        aPosition, 
+        2, 
+        gl.FLOAT, 
+        false, 
+        5 * Float32Array.BYTES_PER_ELEMENT, 
+        0
+    );
     gl.enableVertexAttribArray(aPosition);
+    var aColor = gl.getAttribLocation(shaderProgram, "aColor");
+    gl.vertexAttribPointer(
+        aColor,
+        3,
+        gl.FLOAT,
+        false, 
+        5 * Float32Array.BYTES_PER_ELEMENT,
+        2 * Float32Array.BYTES_PER_ELEMENT
+    );
+    gl.enableVertexAttribArray(aColor);
 
-    gl.clearColor(1.0, 0.0, 0.0, 1.0);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     
     var primitive = gl.POINTS;
