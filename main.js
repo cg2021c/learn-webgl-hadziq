@@ -28,10 +28,9 @@ function main() {
         attribute vec2 aPosition;
         attribute vec3 aColor;
         varying vec3 vColor;
-        uniform float uXChange;
+        uniform float uChange;
         void main() {
-            vec2 position = vec2(aPosition.x + uXChange, aPosition.y);
-            gl_Position = vec4(position, 0.0, 1.0);
+            gl_Position = vec4(aPosition + uChange, 0.0, 1.0);
             vColor = aColor;
         }
     `;
@@ -92,22 +91,24 @@ function main() {
     gl.enableVertexAttribArray(aColor);
 
     var count = 0;
-    var xSpeedRaw = 1;
+    var speedRaw = 1;
     var fps = 60;
-    var xSpeed = xSpeedRaw / fps / 10;
-    var xChange = 0;
-    var uXChange = gl.getUniformLocation(shaderProgram, "uXChange");
+    var speed = speedRaw / fps / 10;
+    var change = 0;
+    var uChange = gl.getUniformLocation(shaderProgram, "uChange");
     function render() {
-        xChange = xChange + xSpeed;
-        gl.uniform1f(uXChange, xChange);
-        console.log(++count);
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        var primitive = gl.TRIANGLES;
-        var offset = 0;
-        var nVertex = 6;
-        gl.drawArrays(primitive, offset, nVertex);
+        setTimeout( function() {
+            change = change + speed;
+            gl.uniform1f(uChange, change);
+            console.log(++count);
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            var primitive = gl.TRIANGLES;
+            var offset = 0;
+            var nVertex = 6;
+            gl.drawArrays(primitive, offset, nVertex);
+            render();
+        }, 1000/fps);
     }
-    render();
-    setInterval(render, 1000/fps);  // frame rate per second (fps): 60
+    render(); 
 }
