@@ -28,9 +28,10 @@ function main() {
         attribute vec2 aPosition;
         attribute vec3 aColor;
         varying vec3 vColor;
+        uniform float uXChange;
         void main() {
-            gl_PointSize = 10.0;
-            gl_Position = vec4(aPosition, 0.0, 1.0);
+            vec2 position = vec2(aPosition.x + uXChange, aPosition.y);
+            gl_Position = vec4(position, 0.0, 1.0);
             vColor = aColor;
         }
     `;
@@ -90,11 +91,21 @@ function main() {
     );
     gl.enableVertexAttribArray(aColor);
 
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    
-    var primitive = gl.TRIANGLES;
-    var offset = 0;
-    var nVertex = 6;
-    gl.drawArrays(primitive, offset, nVertex);
+    var count = 0;
+    var xSpeed = 0.005;
+    var xChange = 0;
+    var uXChange = gl.getUniformLocation(shaderProgram, "uXChange");
+    function render() {
+        xChange = xChange + xSpeed;
+        gl.uniform1f(uXChange, xChange);
+        console.log(++count);
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        var primitive = gl.TRIANGLES;
+        var offset = 0;
+        var nVertex = 6;
+        gl.drawArrays(primitive, offset, nVertex);
+    }
+    render();
+    setInterval(render, 1000/60);  // frame rate per second (fps): 60
 }
