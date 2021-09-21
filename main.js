@@ -90,16 +90,23 @@ function main() {
     );
     gl.enableVertexAttribArray(aColor);
 
-    var count = 0;
+    // Interactive graphics with mouse
+    var freeze = false;
+    function onMouseClick(event) {
+        freeze = !freeze;
+    }
+    document.addEventListener("click", onMouseClick);
+
     var speedRaw = 1;
     var speed = speedRaw / 600;
     var change = 0;
     var uChange = gl.getUniformLocation(shaderProgram, "uChange");
     function render() {
-        if (change >= 0.5 || change <= -0.5) speed = -speed;
-        change = change + speed;
-        gl.uniform1f(uChange, change);
-        console.log(++count);
+        if (!freeze) {  // If it is not freezing, then animate the rectangle
+            if (change >= 0.5 || change <= -0.5) speed = -speed;
+            change = change + speed;
+            gl.uniform1f(uChange, change);
+        }
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
         var primitive = gl.TRIANGLES;
