@@ -90,12 +90,21 @@ function main() {
     );
     gl.enableVertexAttribArray(aColor);
 
-    // Interactive graphics with mouse
     var freeze = false;
+    // Interactive graphics with mouse
     function onMouseClick(event) {
         freeze = !freeze;
     }
     document.addEventListener("click", onMouseClick);
+    // Interactive graphics with keyboard
+    function onKeydown(event) {
+        if (event.keyCode == 32) freeze = true;
+    }
+    function onKeyup(event) {
+        if (event.keyCode == 32) freeze = false;
+    }
+    document.addEventListener("keydown", onKeydown);
+    document.addEventListener("keyup", onKeyup);
 
     var speedRaw = 1;
     var speed = speedRaw / 600;
