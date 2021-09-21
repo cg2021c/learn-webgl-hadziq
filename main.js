@@ -92,7 +92,9 @@ function main() {
     gl.enableVertexAttribArray(aColor);
 
     var count = 0;
-    var xSpeed = 0.005;
+    var xSpeedRaw = 1;
+    var fps = 60;
+    var xSpeed = xSpeedRaw / fps / 10;
     var xChange = 0;
     var uXChange = gl.getUniformLocation(shaderProgram, "uXChange");
     function render() {
@@ -107,5 +109,5 @@ function main() {
         gl.drawArrays(primitive, offset, nVertex);
     }
     render();
-    setInterval(render, 1000/60);  // frame rate per second (fps): 60
+    setInterval(render, 1000/fps);  // frame rate per second (fps): 60
 }
