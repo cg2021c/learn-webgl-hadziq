@@ -31,12 +31,14 @@ function main() {
         uniform vec3 uChange;
         void main() {
             vec4 originalPosition = vec4(aPosition, 1.);
+            // TRANSLATION
             mat4 translationMatrix = mat4(
                 1., 0., 0., 0.,
                 0., 1., 0., 0.,
                 0., 0., 1., 0.,
                 uChange.x, uChange.y, uChange.z, 1.
             );
+            // ROTATION
             float theta = uChange.x;
             float cTheta = cos(theta);
             float sTheta = sin(theta);
@@ -46,7 +48,15 @@ function main() {
                 0., 0., 1., 0.,
                 0., 0., 0., 1.
             );
-            gl_Position = translationMatrix * rotationMatrix * originalPosition;
+            // DILATION
+            float scale = uChange.y;
+            mat4 dilationMatrix = mat4(
+                scale, 0., 0., 0.,
+                0., scale, 0., 0.,
+                0., 0., scale, 0.,
+                0., 0., 0., 1.
+            );
+            gl_Position = translationMatrix * dilationMatrix * rotationMatrix * originalPosition;
             vColor = aColor;
         }
     `;
