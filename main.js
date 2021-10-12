@@ -11,12 +11,12 @@ function main() {
      * D ( 0.5,  0.5), White (1.0, 1.0, 1.0)
      */
     var vertices = [
-         0.5, -0.5, 0.0, 1.0, 0.0,    // Point B
-        -0.5, -0.5, 1.0, 0.0, 0.0,    // Point A
-        -0.5,  0.5, 0.0, 0.0, 1.0,    // Point C
-         0.5,  0.5, 1.0, 1.0, 1.0,    // Point D
-         0.5, -0.5, 0.0, 1.0, 0.0,    // Point B
-        -0.5,  0.5, 0.0, 0.0, 1.0     // Point C
+         0.5, -0.5, 0.0, 0.0, 1.0, 0.0,    // Point B
+        -0.5, -0.5, 0.0, 1.0, 0.0, 0.0,    // Point A
+        -0.5,  0.5, 0.0, 0.0, 0.0, 1.0,    // Point C
+         0.5,  0.5, 0.0, 1.0, 1.0, 1.0,    // Point D
+         0.5, -0.5, 0.0, 0.0, 1.0, 0.0,    // Point B
+        -0.5,  0.5, 0.0, 0.0, 0.0, 1.0     // Point C
     ];
 
     // Create a linked-list for storing the vertices data
@@ -25,12 +25,12 @@ function main() {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
     var vertexShaderSource = `
-        attribute vec2 aPosition;
+        attribute vec3 aPosition;
         attribute vec3 aColor;
         varying vec3 vColor;
-        uniform float uChange;
+        uniform vec3 uChange;
         void main() {
-            gl_Position = vec4(aPosition + uChange, 0.0, 1.0);
+            gl_Position = vec4(aPosition + uChange, 1.0);
             vColor = aColor;
         }
     `;
@@ -72,10 +72,10 @@ function main() {
     var aPosition = gl.getAttribLocation(shaderProgram, "aPosition");
     gl.vertexAttribPointer(
         aPosition, 
-        2, 
+        3, 
         gl.FLOAT, 
         false, 
-        5 * Float32Array.BYTES_PER_ELEMENT, 
+        6 * Float32Array.BYTES_PER_ELEMENT, 
         0
     );
     gl.enableVertexAttribArray(aPosition);
@@ -85,8 +85,8 @@ function main() {
         3,
         gl.FLOAT,
         false, 
-        5 * Float32Array.BYTES_PER_ELEMENT,
-        2 * Float32Array.BYTES_PER_ELEMENT
+        6 * Float32Array.BYTES_PER_ELEMENT,
+        3 * Float32Array.BYTES_PER_ELEMENT
     );
     gl.enableVertexAttribArray(aColor);
 
@@ -107,14 +107,18 @@ function main() {
     document.addEventListener("keyup", onKeyup);
 
     var speedRaw = 1;
-    var speed = speedRaw / 600;
-    var change = 0;
+    var speedX = speedRaw / 600;
+    var speedY = 2 * speedRaw / 600;
+    var changeX = 0;
+    var changeY = 0;
     var uChange = gl.getUniformLocation(shaderProgram, "uChange");
     function render() {
         if (!freeze) {  // If it is not freezing, then animate the rectangle
-            if (change >= 0.5 || change <= -0.5) speed = -speed;
-            change = change + speed;
-            gl.uniform1f(uChange, change);
+            if (changeX >= 0.5 || changeX <= -0.5) speedX = -speedX;
+            if (changeY >= 0.5 || changeY <= -0.5) speedY = -speedY;
+            changeX = changeX + speedX;
+            changeY = changeY + speedY;
+            gl.uniform3f(uChange, changeX, changeY, 0);
         }
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
