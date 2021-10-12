@@ -120,6 +120,7 @@ function main() {
             changeX = changeX + speedX;
             changeY = changeY + speedY;
             var modelMatrix = glMatrix.mat4.create();
+            glMatrix.mat4.rotate(modelMatrix, modelMatrix, changeX, [0.0, 0.0, 1.0]);
             glMatrix.mat4.translate(modelMatrix, modelMatrix, [changeX, changeY, 0.0]);
             gl.uniformMatrix4fv(uModel, false, modelMatrix);
         }
