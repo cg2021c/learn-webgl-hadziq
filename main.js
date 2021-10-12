@@ -30,9 +30,10 @@ function main() {
         varying vec3 vColor;
         uniform mat4 uModel;
         uniform mat4 uView;
+        uniform mat4 uProjection;
         void main() {
             vec4 originalPosition = vec4(aPosition, 1.);
-            gl_Position = uView * uModel * originalPosition;
+            gl_Position = uProjection * uView * uModel * originalPosition;
             vColor = aColor;
         }
     `;
@@ -92,6 +93,10 @@ function main() {
     );
     gl.enableVertexAttribArray(aColor);
 
+    var uProjection = gl.getUniformLocation(shaderProgram, "uProjection");
+    var perspectiveMatrix = glMatrix.mat4.create();
+    glMatrix.mat4.perspective(perspectiveMatrix, Math.PI/3, 1.0, 0.5, 10.0);
+
     var freeze = false;
     // Interactive graphics with mouse
     function onMouseClick(event) {
@@ -109,6 +114,7 @@ function main() {
         if (event.keyCode == 38) cameraZ -= 0.1; // Up
         if (event.keyCode == 39) cameraX += 0.1; // Right
         if (event.keyCode == 40) cameraZ += 0.1; // Down
+        console.log(cameraZ);
         glMatrix.mat4.lookAt(
             viewMatrix,
             [cameraX, 0.0, cameraZ],    // the location of the eye or the camera
@@ -140,6 +146,7 @@ function main() {
             glMatrix.mat4.translate(modelMatrix, modelMatrix, [changeX, changeY, 0.0]);
             gl.uniformMatrix4fv(uModel, false, modelMatrix);
             gl.uniformMatrix4fv(uView, false, viewMatrix);
+            gl.uniformMatrix4fv(uProjection, false, perspectiveMatrix);
         }
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
