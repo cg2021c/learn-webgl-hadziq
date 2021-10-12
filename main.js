@@ -30,14 +30,23 @@ function main() {
         varying vec3 vColor;
         uniform vec3 uChange;
         void main() {
-            vec4 originalPosition = vec4(aPosition, 1.0);
+            vec4 originalPosition = vec4(aPosition, 1.);
             mat4 translationMatrix = mat4(
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 1.0, 0.0,
-                uChange.x, uChange.y, uChange.z, 1.0
+                1., 0., 0., 0.,
+                0., 1., 0., 0.,
+                0., 0., 1., 0.,
+                uChange.x, uChange.y, uChange.z, 1.
             );
-            gl_Position = translationMatrix * originalPosition;
+            float theta = uChange.x;
+            float cTheta = cos(theta);
+            float sTheta = sin(theta);
+            mat4 rotationMatrix = mat4(
+                cTheta, sTheta, 0., 0.,
+                -sTheta, cTheta, 0., 0., 
+                0., 0., 1., 0.,
+                0., 0., 0., 1.
+            );
+            gl_Position = translationMatrix * rotationMatrix * originalPosition;
             vColor = aColor;
         }
     `;
@@ -46,7 +55,7 @@ function main() {
         precision mediump float;
         varying vec3 vColor;
         void main() {
-            gl_FragColor = vec4(vColor, 1.0);
+            gl_FragColor = vec4(vColor, 1.);
         }
     `;
 
