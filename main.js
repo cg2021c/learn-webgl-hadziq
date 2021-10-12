@@ -29,9 +29,10 @@ function main() {
         attribute vec3 aColor;
         varying vec3 vColor;
         uniform mat4 uModel;
+        uniform mat4 uView;
         void main() {
             vec4 originalPosition = vec4(aPosition, 1.);
-            gl_Position = uModel * originalPosition;
+            gl_Position = uView * uModel * originalPosition;
             vColor = aColor;
         }
     `;
@@ -98,8 +99,22 @@ function main() {
     }
     document.addEventListener("click", onMouseClick);
     // Interactive graphics with keyboard
+    var cameraX = 0.0;
+    var cameraZ = 0.0;
+    var uView = gl.getUniformLocation(shaderProgram, "uView");
+    var viewMatrix = glMatrix.mat4.create();
     function onKeydown(event) {
         if (event.keyCode == 32) freeze = true;
+        if (event.keyCode == 37) cameraX -= 0.1; // Left
+        if (event.keyCode == 38) cameraZ -= 0.1; // Up
+        if (event.keyCode == 39) cameraX += 0.1; // Right
+        if (event.keyCode == 40) cameraZ += 0.1; // Down
+        glMatrix.mat4.lookAt(
+            viewMatrix,
+            [cameraX, 0.0, cameraZ],    // the location of the eye or the camera
+            [cameraX, 0.0, -10],        // the point where the camera look at
+            [0.0, 1.0, 0.0]
+        );
     }
     function onKeyup(event) {
         if (event.keyCode == 32) freeze = false;
@@ -124,6 +139,7 @@ function main() {
             glMatrix.mat4.rotate(modelMatrix, modelMatrix, changeX, [0.0, 0.0, 1.0]);
             glMatrix.mat4.translate(modelMatrix, modelMatrix, [changeX, changeY, 0.0]);
             gl.uniformMatrix4fv(uModel, false, modelMatrix);
+            gl.uniformMatrix4fv(uView, false, viewMatrix);
         }
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
