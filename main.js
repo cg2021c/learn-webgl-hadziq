@@ -30,7 +30,14 @@ function main() {
         varying vec3 vColor;
         uniform vec3 uChange;
         void main() {
-            gl_Position = vec4(aPosition + uChange, 1.0);
+            vec4 originalPosition = vec4(aPosition, 1.0);
+            mat4 translationMatrix = mat4(
+                1.0, 0.0, 0.0, 0.0,
+                0.0, 1.0, 0.0, 0.0,
+                0.0, 0.0, 1.0, 0.0,
+                uChange.x, uChange.y, uChange.z, 1.0
+            );
+            gl_Position = translationMatrix * originalPosition;
             vColor = aColor;
         }
     `;
