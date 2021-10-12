@@ -28,35 +28,10 @@ function main() {
         attribute vec3 aPosition;
         attribute vec3 aColor;
         varying vec3 vColor;
-        uniform vec3 uChange;
+        uniform mat4 uModel;
         void main() {
             vec4 originalPosition = vec4(aPosition, 1.);
-            // TRANSLATION
-            mat4 translationMatrix = mat4(
-                1., 0., 0., 0.,
-                0., 1., 0., 0.,
-                0., 0., 1., 0.,
-                uChange.x, uChange.y, uChange.z, 1.
-            );
-            // ROTATION
-            float theta = uChange.x;
-            float cTheta = cos(theta);
-            float sTheta = sin(theta);
-            mat4 rotationMatrix = mat4(
-                cTheta, sTheta, 0., 0.,
-                -sTheta, cTheta, 0., 0., 
-                0., 0., 1., 0.,
-                0., 0., 0., 1.
-            );
-            // DILATION
-            float scale = uChange.y;
-            mat4 dilationMatrix = mat4(
-                scale, 0., 0., 0.,
-                0., scale, 0., 0.,
-                0., 0., scale, 0.,
-                0., 0., 0., 1.
-            );
-            gl_Position = translationMatrix * dilationMatrix * rotationMatrix * originalPosition;
+            gl_Position = uModel * originalPosition;
             vColor = aColor;
         }
     `;
@@ -137,14 +112,16 @@ function main() {
     var speedY = 2 * speedRaw / 600;
     var changeX = 0;
     var changeY = 0;
-    var uChange = gl.getUniformLocation(shaderProgram, "uChange");
+    var uModel = gl.getUniformLocation(shaderProgram, "uModel");
     function render() {
         if (!freeze) {  // If it is not freezing, then animate the rectangle
             if (changeX >= 0.5 || changeX <= -0.5) speedX = -speedX;
             if (changeY >= 0.5 || changeY <= -0.5) speedY = -speedY;
             changeX = changeX + speedX;
             changeY = changeY + speedY;
-            gl.uniform3f(uChange, changeX, changeY, 0);
+            var modelMatrix = glMatrix.mat4.create();
+            glMatrix.mat4.translate(modelMatrix, modelMatrix, [changeX, changeY, 0.0]);
+            gl.uniformMatrix4fv(uModel, false, modelMatrix);
         }
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
