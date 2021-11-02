@@ -73,8 +73,14 @@ function main() {
     var fragmentShaderSource = `
         precision mediump float;
         varying vec3 vColor;
+        uniform vec3 uAmbientConstant;   // Represents the light color
+        uniform float uAmbientIntensity;
         void main() {
-            gl_FragColor = vec4(vColor, 1.);
+            // Calculate the ambient effect
+            vec3 ambient = uAmbientConstant * uAmbientIntensity;
+            vec3 phong = ambient; // + diffuse + specular;
+            // Apply the shading
+            gl_FragColor = vec4(phong * vColor, 1.);
         }
     `;
 
@@ -124,6 +130,13 @@ function main() {
         3 * Float32Array.BYTES_PER_ELEMENT
     );
     gl.enableVertexAttribArray(aColor);
+
+    // Lighting and Shading
+    var uAmbientConstant = gl.getUniformLocation(shaderProgram, "uAmbientConstant");
+    var uAmbientIntensity = gl.getUniformLocation(shaderProgram, "uAmbientIntensity");
+    gl.uniform3fv(uAmbientConstant, [1.0, 0.5, 0.0]); // orange light
+    // gl.uniform3fv(uAmbientConstant, [1.0, 1.0, 1.0]); // white light
+    gl.uniform1f(uAmbientIntensity, 0.6); // 60% of light
 
     var uProjection = gl.getUniformLocation(shaderProgram, "uProjection");
     var perspectiveMatrix = glMatrix.mat4.create();
