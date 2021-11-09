@@ -60,6 +60,7 @@ function main() {
         attribute vec3 aPosition;
         attribute vec3 aColor;
         attribute vec3 aNormal;
+        varying vec3 vPosition;
         varying vec3 vColor;
         varying vec3 vNormal;
         uniform mat4 uModel;
@@ -68,6 +69,7 @@ function main() {
         void main() {
             vec4 originalPosition = vec4(aPosition, 1.);
             gl_Position = uProjection * uView * uModel * originalPosition;
+            vPosition = (uModel * originalPosition).xyz;
             vColor = aColor;
             vNormal = aNormal;
         }
@@ -75,20 +77,21 @@ function main() {
 
     var fragmentShaderSource = `
         precision mediump float;
+        varying vec3 vPosition;
         varying vec3 vColor;
         varying vec3 vNormal;
         uniform vec3 uAmbientConstant;   // Represents the light color
         uniform float uAmbientIntensity;
         uniform vec3 uDiffuseConstant;  // Represents the light color
-        uniform vec3 uLight;
+        uniform vec3 uLightPosition;
         uniform mat3 uNormalModel;
         void main() {
             // Calculate the ambient effect
             vec3 ambient = uAmbientConstant * uAmbientIntensity;
             // Calculate the diffuse effect
             vec3 normalizedNormal = normalize(uNormalModel * vNormal);
-            vec3 normalizedLight = normalize(uLight);
-            vec3 diffuse = uDiffuseConstant * max(dot(normalizedNormal, normalizedLight), 0.0);
+            vec3 normalizedLight = normalize(uLightPosition - vPosition);
+            vec3 diffuse = uDiffuseConstant * max(dot(normalizedNormal, normalizedLight), 0.);
             vec3 phong = ambient + diffuse; // + specular;
             // Apply the shading
             gl_FragColor = vec4(phong * vColor, 1.);
@@ -161,11 +164,12 @@ function main() {
     gl.uniform1f(uAmbientIntensity, 0.2); // 20% of light
     // DIFFUSE
     var uDiffuseConstant = gl.getUniformLocation(shaderProgram, "uDiffuseConstant");
-    var uLight = gl.getUniformLocation(shaderProgram, "uLight");
+    var uLightPosition = gl.getUniformLocation(shaderProgram, "uLightPosition");
     var uNormalModel = gl.getUniformLocation(shaderProgram, "uNormalModel");
     gl.uniform3fv(uDiffuseConstant, [1.0, 1.0, 1.0]);   // white light
-    gl.uniform3fv(uLight, [-1.0, 0.0, 0.0]);  // directional light from the left
+    gl.uniform3fv(uLightPosition, [-1.5, 1.5, 0.0]);  // light position
 
+    // Perspective projection
     var uProjection = gl.getUniformLocation(shaderProgram, "uProjection");
     var perspectiveMatrix = glMatrix.mat4.create();
     glMatrix.mat4.perspective(perspectiveMatrix, Math.PI/3, 1.0, 0.5, 10.0);
@@ -179,12 +183,13 @@ function main() {
     document.addEventListener("click", onMouseClick);
     // Interactive graphics with keyboard
     var cameraX = 0.0;
+    var cameraY = 2.0
     var cameraZ = 5.0;
     var uView = gl.getUniformLocation(shaderProgram, "uView");
     var viewMatrix = glMatrix.mat4.create();
     glMatrix.mat4.lookAt(
         viewMatrix,
-        [cameraX, 0.0, cameraZ],    // the location of the eye or the camera
+        [cameraX, cameraY, cameraZ],    // the location of the eye or the camera
         [cameraX, 0.0, -10],        // the point where the camera look at
         [0.0, 1.0, 0.0]
     );
@@ -197,7 +202,7 @@ function main() {
         if (event.keyCode == 40) cameraZ += 0.1; // Down
         glMatrix.mat4.lookAt(
             viewMatrix,
-            [cameraX, 0.0, cameraZ],    // the location of the eye or the camera
+            [cameraX, cameraY, cameraZ],    // the location of the eye or the camera
             [cameraX, 0.0, -10],        // the point where the camera look at
             [0.0, 1.0, 0.0]
         );
