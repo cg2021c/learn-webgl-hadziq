@@ -5,36 +5,36 @@ function main() {
 
     // Define vertices data for a cube
     var vertices = [
-        // Face A       // Red
-        -1, -1, -1,     1, 0, 0,    // Index:  0    
-         1, -1, -1,     1, 0, 0,    // Index:  1
-         1,  1, -1,     1, 0, 0,    // Index:  2
-        -1,  1, -1,     1, 0, 0,    // Index:  3
+        // Face A       // Red      // Surface orientation (normal vector)
+        -1, -1, -1,     1, 0, 0,    0, 0, -1,    // Index:  0    
+         1, -1, -1,     1, 0, 0,    0, 0, -1,    // Index:  1
+         1,  1, -1,     1, 0, 0,    0, 0, -1,    // Index:  2
+        -1,  1, -1,     1, 0, 0,    0, 0, -1,    // Index:  3
         // Face B       // Yellow
-        -1, -1,  1,     1, 1, 0,    // Index:  4
-         1, -1,  1,     1, 1, 0,    // Index:  5
-         1,  1,  1,     1, 1, 0,    // Index:  6
-        -1,  1,  1,     1, 1, 0,    // Index:  7
+        -1, -1,  1,     1, 1, 0,    0, 0, 1,     // Index:  4
+         1, -1,  1,     1, 1, 0,    0, 0, 1,     // Index:  5
+         1,  1,  1,     1, 1, 0,    0, 0, 1,     // Index:  6
+        -1,  1,  1,     1, 1, 0,    0, 0, 1,     // Index:  7
         // Face C       // Green
-        -1, -1, -1,     0, 1, 0,    // Index:  8
-        -1,  1, -1,     0, 1, 0,    // Index:  9
-        -1,  1,  1,     0, 1, 0,    // Index: 10
-        -1, -1,  1,     0, 1, 0,    // Index: 11
+        -1, -1, -1,     0, 1, 0,    -1, 0, 0,    // Index:  8
+        -1,  1, -1,     0, 1, 0,    -1, 0, 0,    // Index:  9
+        -1,  1,  1,     0, 1, 0,    -1, 0, 0,    // Index: 10
+        -1, -1,  1,     0, 1, 0,    -1, 0, 0,    // Index: 11
         // Face D       // Blue
-         1, -1, -1,     0, 0, 1,    // Index: 12
-         1,  1, -1,     0, 0, 1,    // Index: 13
-         1,  1,  1,     0, 0, 1,    // Index: 14
-         1, -1,  1,     0, 0, 1,    // Index: 15
+         1, -1, -1,     0, 0, 1,    1, 0, 0,     // Index: 12
+         1,  1, -1,     0, 0, 1,    1, 0, 0,     // Index: 13
+         1,  1,  1,     0, 0, 1,    1, 0, 0,     // Index: 14
+         1, -1,  1,     0, 0, 1,    1, 0, 0,     // Index: 15
         // Face E       // Orange
-        -1, -1, -1,     1, 0.5, 0,  // Index: 16
-        -1, -1,  1,     1, 0.5, 0,  // Index: 17
-         1, -1,  1,     1, 0.5, 0,  // Index: 18
-         1, -1, -1,     1, 0.5, 0,  // Index: 19
+        -1, -1, -1,     1, 0.5, 0,  0, -1, 0,    // Index: 16
+        -1, -1,  1,     1, 0.5, 0,  0, -1, 0,    // Index: 17
+         1, -1,  1,     1, 0.5, 0,  0, -1, 0,    // Index: 18
+         1, -1, -1,     1, 0.5, 0,  0, -1, 0,    // Index: 19
         // Face F       // White
-        -1,  1, -1,     1, 1, 1,    // Index: 20
-        -1,  1,  1,     1, 1, 1,    // Index: 21
-         1,  1,  1,     1, 1, 1,    // Index: 22
-         1,  1, -1,     1, 1, 1     // Index: 23
+        -1,  1, -1,     1, 1, 1,    0, 1, 0,     // Index: 20
+        -1,  1,  1,     1, 1, 1,    0, 1, 0,     // Index: 21
+         1,  1,  1,     1, 1, 1,    0, 1, 0,     // Index: 22
+         1,  1, -1,     1, 1, 1,    0, 1, 0      // Index: 23
     ];
 
     var indices = [
@@ -59,7 +59,9 @@ function main() {
     var vertexShaderSource = `
         attribute vec3 aPosition;
         attribute vec3 aColor;
+        attribute vec3 aNormal;
         varying vec3 vColor;
+        varying vec3 vNormal;
         uniform mat4 uModel;
         uniform mat4 uView;
         uniform mat4 uProjection;
@@ -67,18 +69,27 @@ function main() {
             vec4 originalPosition = vec4(aPosition, 1.);
             gl_Position = uProjection * uView * uModel * originalPosition;
             vColor = aColor;
+            vNormal = aNormal;
         }
     `;
 
     var fragmentShaderSource = `
         precision mediump float;
         varying vec3 vColor;
+        varying vec3 vNormal;
         uniform vec3 uAmbientConstant;   // Represents the light color
         uniform float uAmbientIntensity;
+        uniform vec3 uDiffuseConstant;  // Represents the light color
+        uniform vec3 uLight;
+        uniform mat3 uNormalModel;
         void main() {
             // Calculate the ambient effect
             vec3 ambient = uAmbientConstant * uAmbientIntensity;
-            vec3 phong = ambient; // + diffuse + specular;
+            // Calculate the diffuse effect
+            vec3 normalizedNormal = normalize(uNormalModel * vNormal);
+            vec3 normalizedLight = normalize(uLight);
+            vec3 diffuse = uDiffuseConstant * max(dot(normalizedNormal, normalizedLight), 0.0);
+            vec3 phong = ambient + diffuse; // + specular;
             // Apply the shading
             gl_FragColor = vec4(phong * vColor, 1.);
         }
@@ -116,7 +127,7 @@ function main() {
         3, 
         gl.FLOAT, 
         false, 
-        6 * Float32Array.BYTES_PER_ELEMENT, 
+        9 * Float32Array.BYTES_PER_ELEMENT, 
         0
     );
     gl.enableVertexAttribArray(aPosition);
@@ -126,21 +137,39 @@ function main() {
         3,
         gl.FLOAT,
         false, 
-        6 * Float32Array.BYTES_PER_ELEMENT,
+        9 * Float32Array.BYTES_PER_ELEMENT,
         3 * Float32Array.BYTES_PER_ELEMENT
     );
     gl.enableVertexAttribArray(aColor);
+    var aNormal = gl.getAttribLocation(shaderProgram, "aNormal");
+    gl.vertexAttribPointer(
+        aNormal,
+        3,
+        gl.FLOAT,
+        false, 
+        9 * Float32Array.BYTES_PER_ELEMENT,
+        6 * Float32Array.BYTES_PER_ELEMENT
+    );
+    gl.enableVertexAttribArray(aNormal);
 
     // Lighting and Shading
+    // AMBIENT
     var uAmbientConstant = gl.getUniformLocation(shaderProgram, "uAmbientConstant");
     var uAmbientIntensity = gl.getUniformLocation(shaderProgram, "uAmbientIntensity");
-    gl.uniform3fv(uAmbientConstant, [1.0, 0.5, 0.0]); // orange light
-    // gl.uniform3fv(uAmbientConstant, [1.0, 1.0, 1.0]); // white light
-    gl.uniform1f(uAmbientIntensity, 0.6); // 60% of light
+    // gl.uniform3fv(uAmbientConstant, [1.0, 0.5, 0.0]);    // orange light
+    gl.uniform3fv(uAmbientConstant, [1.0, 1.0, 1.0]);       // white light
+    gl.uniform1f(uAmbientIntensity, 0.2); // 20% of light
+    // DIFFUSE
+    var uDiffuseConstant = gl.getUniformLocation(shaderProgram, "uDiffuseConstant");
+    var uLight = gl.getUniformLocation(shaderProgram, "uLight");
+    var uNormalModel = gl.getUniformLocation(shaderProgram, "uNormalModel");
+    gl.uniform3fv(uDiffuseConstant, [1.0, 1.0, 1.0]);   // white light
+    gl.uniform3fv(uLight, [-1.0, 0.0, 0.0]);  // directional light from the left
 
     var uProjection = gl.getUniformLocation(shaderProgram, "uProjection");
     var perspectiveMatrix = glMatrix.mat4.create();
     glMatrix.mat4.perspective(perspectiveMatrix, Math.PI/3, 1.0, 0.5, 10.0);
+    gl.uniformMatrix4fv(uProjection, false, perspectiveMatrix);
 
     var freeze = false;
     // Interactive graphics with mouse
@@ -159,6 +188,7 @@ function main() {
         [cameraX, 0.0, -10],        // the point where the camera look at
         [0.0, 1.0, 0.0]
     );
+    gl.uniformMatrix4fv(uView, false, viewMatrix);
     function onKeydown(event) {
         if (event.keyCode == 32) freeze = true;
         if (event.keyCode == 37) cameraX -= 0.1; // Left
@@ -171,6 +201,7 @@ function main() {
             [cameraX, 0.0, -10],        // the point where the camera look at
             [0.0, 1.0, 0.0]
         );
+        gl.uniformMatrix4fv(uView, false, viewMatrix);
     }
     function onKeyup(event) {
         if (event.keyCode == 32) freeze = false;
@@ -193,11 +224,12 @@ function main() {
             var modelMatrix = glMatrix.mat4.create();
             // glMatrix.mat4.scale(modelMatrix, modelMatrix, [changeY, changeY, changeY]);
             glMatrix.mat4.rotate(modelMatrix, modelMatrix, changeX, [0.0, 0.0, 1.0]);   // Rotation about Z axis
-            glMatrix.mat4.rotate(modelMatrix, modelMatrix, changeY, [0.0, 1.0, 0.0]);   // Rotation about Y axis
+            glMatrix.mat4.rotate(modelMatrix, modelMatrix, changeY * 2.0, [0.0, 1.0, 0.0]);   // Rotation about Y axis
             glMatrix.mat4.translate(modelMatrix, modelMatrix, [changeX, changeY, 0.0]);
             gl.uniformMatrix4fv(uModel, false, modelMatrix);
-            gl.uniformMatrix4fv(uView, false, viewMatrix);
-            gl.uniformMatrix4fv(uProjection, false, perspectiveMatrix);
+            var normalModelMatrix = glMatrix.mat3.create();
+            glMatrix.mat3.normalFromMat4(normalModelMatrix, modelMatrix);
+            gl.uniformMatrix3fv(uNormalModel, false, normalModelMatrix);
         }
         gl.enable(gl.DEPTH_TEST);
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
