@@ -88,18 +88,34 @@ function main() {
         uniform vec3 uSpecularConstant; // Represents the light color
         uniform vec3 uViewerPosition;
         void main() {
-            // Calculate the ambient effect
+            
+            // Calculate the ambient component
             vec3 ambient = uAmbientConstant * uAmbientIntensity;
-            // Calculate the diffuse effect
+            
+            // Prepare the diffuse components
             vec3 normalizedNormal = normalize(uNormalModel * vNormal);
-            vec3 normalizedLight = normalize(uLightPosition - vPosition);
-            vec3 diffuse = uDiffuseConstant * max(dot(normalizedNormal, normalizedLight), 0.);
-            vec3 reflector = 2.0 * dot(normalizedNormal, normalizedLight) * (uNormalModel * vNormal) - (uLightPosition - vPosition);
-            vec3 normalizedViewer = normalize(uViewerPosition - vPosition);
-            vec3 normalizedReflector = normalize(reflector);
-            float shininessConstant = 7.0;
-            vec3 specular = uSpecularConstant * pow(dot(normalizedViewer, normalizedReflector), shininessConstant);
+            vec3 vLight = uLightPosition - vPosition;
+            vec3 normalizedLight = normalize(vLight);
+            vec3 diffuse = vec3(0., 0., 0.);
+            float cosTheta = max(dot(normalizedNormal, normalizedLight), 0.);
+
+            // Prepare the specular components
+            vec3 vReflector = 2.0 * cosTheta * vNormal - (vLight);
+            // or using the following expression
+            // vec3 vReflector = reflect(-vLight, vNormal);
+            vec3 vViewer = uViewerPosition - vPosition;
+            vec3 normalizedViewer = normalize(vViewer);
+            vec3 normalizedReflector = normalize(vReflector);
+            float shininessConstant = 100.0;
+            vec3 specular = vec3(0., 0., 0.);
+            
+            // Calculate the phong reflection effect
+            if (cosTheta > 0.) {
+                diffuse = uDiffuseConstant * cosTheta;
+                specular = uSpecularConstant * pow(cosTheta, shininessConstant);
+            }
             vec3 phong = ambient + diffuse + specular;
+
             // Apply the shading
             gl_FragColor = vec4(phong * vColor, 1.);
         }
@@ -174,7 +190,7 @@ function main() {
     var uLightPosition = gl.getUniformLocation(shaderProgram, "uLightPosition");
     var uNormalModel = gl.getUniformLocation(shaderProgram, "uNormalModel");
     gl.uniform3fv(uDiffuseConstant, [1.0, 1.0, 1.0]);   // white light
-    gl.uniform3fv(uLightPosition, [-1.5, 1.5, 0.0]);    // light position
+    gl.uniform3fv(uLightPosition, [-1.0, 1.0, 1.0]);    // light position
 
     // Perspective projection
     var uProjection = gl.getUniformLocation(shaderProgram, "uProjection");
