@@ -85,6 +85,8 @@ function main() {
         uniform vec3 uDiffuseConstant;  // Represents the light color
         uniform vec3 uLightPosition;
         uniform mat3 uNormalModel;
+        uniform vec3 uSpecularConstant; // Represents the light color
+        uniform vec3 uViewerPosition;
         void main() {
             // Calculate the ambient effect
             vec3 ambient = uAmbientConstant * uAmbientIntensity;
@@ -92,7 +94,12 @@ function main() {
             vec3 normalizedNormal = normalize(uNormalModel * vNormal);
             vec3 normalizedLight = normalize(uLightPosition - vPosition);
             vec3 diffuse = uDiffuseConstant * max(dot(normalizedNormal, normalizedLight), 0.);
-            vec3 phong = ambient + diffuse; // + specular;
+            vec3 reflector = 2.0 * dot(normalizedNormal, normalizedLight) * (uNormalModel * vNormal) - (uLightPosition - vPosition);
+            vec3 normalizedViewer = normalize(uViewerPosition - vPosition);
+            vec3 normalizedReflector = normalize(reflector);
+            float shininessConstant = 7.0;
+            vec3 specular = uSpecularConstant * pow(dot(normalizedViewer, normalizedReflector), shininessConstant);
+            vec3 phong = ambient + diffuse + specular;
             // Apply the shading
             gl_FragColor = vec4(phong * vColor, 1.);
         }
@@ -167,7 +174,7 @@ function main() {
     var uLightPosition = gl.getUniformLocation(shaderProgram, "uLightPosition");
     var uNormalModel = gl.getUniformLocation(shaderProgram, "uNormalModel");
     gl.uniform3fv(uDiffuseConstant, [1.0, 1.0, 1.0]);   // white light
-    gl.uniform3fv(uLightPosition, [-1.5, 1.5, 0.0]);  // light position
+    gl.uniform3fv(uLightPosition, [-1.5, 1.5, 0.0]);    // light position
 
     // Perspective projection
     var uProjection = gl.getUniformLocation(shaderProgram, "uProjection");
@@ -183,7 +190,7 @@ function main() {
     document.addEventListener("click", onMouseClick);
     // Interactive graphics with keyboard
     var cameraX = 0.0;
-    var cameraY = 2.0
+    var cameraY = 2.0;
     var cameraZ = 5.0;
     var uView = gl.getUniformLocation(shaderProgram, "uView");
     var viewMatrix = glMatrix.mat4.create();
@@ -213,6 +220,12 @@ function main() {
     }
     document.addEventListener("keydown", onKeydown);
     document.addEventListener("keyup", onKeyup);
+    
+    // SPECULAR
+    var uSpecularConstant = gl.getUniformLocation(shaderProgram, "uSpecularConstant");
+    var uViewerPosition = gl.getUniformLocation(shaderProgram, "uViewerPosition");
+    gl.uniform3fv(uSpecularConstant, [1.0, 1.0, 1.0]);  // white light
+    gl.uniform3fv(uViewerPosition, [cameraX, cameraY, cameraZ]);
 
     var speedRaw = 1;
     var speedX = speedRaw / 600;
