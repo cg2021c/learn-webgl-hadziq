@@ -108,11 +108,14 @@ function main() {
             vec3 normalizedReflector = normalize(vReflector);
             float shininessConstant = 100.0;
             vec3 specular = vec3(0., 0., 0.);
+            float cosPhi = max(dot(normalizedViewer, normalizedReflector), 0.);
             
             // Calculate the phong reflection effect
             if (cosTheta > 0.) {
                 diffuse = uDiffuseConstant * cosTheta;
-                specular = uSpecularConstant * pow(cosTheta, shininessConstant);
+            }
+            if (cosPhi > 0.) {
+                specular = uSpecularConstant * pow(cosPhi, shininessConstant);
             }
             vec3 phong = ambient + diffuse + specular;
 
