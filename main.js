@@ -3,38 +3,72 @@ function main() {
     var canvas = document.getElementById('myCanvas');   // The paper
     var gl = canvas.getContext('webgl');                // The brush and the paints
 
+    // For texture
+    var texture, uSampler;
+    function initTextures(callback) {
+        texture = gl.createTexture();
+        if (!texture) {
+            console.log("Failed to create the texture object");
+        }
+        var image = new Image();
+        if (!image) {
+            console.log("Failed to create the image object");
+        }
+        // Register the event handler to be called on loading an image
+        image.onload = function() { loadTexture(image, callback) };
+        // Tell the browser to load an image
+        image.src = "txCrate.bmp";
+    }
+    function loadTexture(image, callback) {
+        // Flip the image's y axis
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+        // Bind the texture object to the target
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        // Set the texture parameters
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        // Set the texture image
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        
+        gl.bindTexture(gl.TEXTURE_2D, null);
+
+        if (callback) {
+            callback();
+        }
+    }
+
     // Define vertices data for a cube
     var vertices = [
-        // Face A       // Red      // Surface orientation (normal vector)
-        -1, -1, -1,     1, 0, 0,    0, 0, -1,    // Index:  0    
-         1, -1, -1,     1, 0, 0,    0, 0, -1,    // Index:  1
-         1,  1, -1,     1, 0, 0,    0, 0, -1,    // Index:  2
-        -1,  1, -1,     1, 0, 0,    0, 0, -1,    // Index:  3
+        // Face A       // Texture Coordinate       // Red      // Surface orientation (normal vector)
+        -1, -1, -1,     0, 0,                       1, 0, 0,    0, 0, -1,    // Index:  0    
+         1, -1, -1,     1, 0,                       1, 0, 0,    0, 0, -1,    // Index:  1
+         1,  1, -1,     1, 1,                       1, 0, 0,    0, 0, -1,    // Index:  2
+        -1,  1, -1,     0, 1,                       1, 0, 0,    0, 0, -1,    // Index:  3
         // Face B       // Yellow
-        -1, -1,  1,     1, 1, 0,    0, 0, 1,     // Index:  4
-         1, -1,  1,     1, 1, 0,    0, 0, 1,     // Index:  5
-         1,  1,  1,     1, 1, 0,    0, 0, 1,     // Index:  6
-        -1,  1,  1,     1, 1, 0,    0, 0, 1,     // Index:  7
+        -1, -1,  1,     0, 0,                       1, 1, 0,    0, 0, 1,     // Index:  4
+         1, -1,  1,     1, 0,                       1, 1, 0,    0, 0, 1,     // Index:  5
+         1,  1,  1,     1, 1,                       1, 1, 0,    0, 0, 1,     // Index:  6
+        -1,  1,  1,     0, 1,                       1, 1, 0,    0, 0, 1,     // Index:  7
         // Face C       // Green
-        -1, -1, -1,     0, 1, 0,    -1, 0, 0,    // Index:  8
-        -1,  1, -1,     0, 1, 0,    -1, 0, 0,    // Index:  9
-        -1,  1,  1,     0, 1, 0,    -1, 0, 0,    // Index: 10
-        -1, -1,  1,     0, 1, 0,    -1, 0, 0,    // Index: 11
+        -1, -1, -1,     0, 0,                       0, 1, 0,    -1, 0, 0,    // Index:  8
+        -1,  1, -1,     1, 0,                       0, 1, 0,    -1, 0, 0,    // Index:  9
+        -1,  1,  1,     1, 1,                       0, 1, 0,    -1, 0, 0,    // Index: 10
+        -1, -1,  1,     0, 1,                       0, 1, 0,    -1, 0, 0,    // Index: 11
         // Face D       // Blue
-         1, -1, -1,     0, 0, 1,    1, 0, 0,     // Index: 12
-         1,  1, -1,     0, 0, 1,    1, 0, 0,     // Index: 13
-         1,  1,  1,     0, 0, 1,    1, 0, 0,     // Index: 14
-         1, -1,  1,     0, 0, 1,    1, 0, 0,     // Index: 15
+         1, -1, -1,     0, 0,                       0, 0, 1,    1, 0, 0,     // Index: 12
+         1,  1, -1,     1, 0,                       0, 0, 1,    1, 0, 0,     // Index: 13
+         1,  1,  1,     1, 1,                       0, 0, 1,    1, 0, 0,     // Index: 14
+         1, -1,  1,     0, 1,                       0, 0, 1,    1, 0, 0,     // Index: 15
         // Face E       // Orange
-        -1, -1, -1,     1, 0.5, 0,  0, -1, 0,    // Index: 16
-        -1, -1,  1,     1, 0.5, 0,  0, -1, 0,    // Index: 17
-         1, -1,  1,     1, 0.5, 0,  0, -1, 0,    // Index: 18
-         1, -1, -1,     1, 0.5, 0,  0, -1, 0,    // Index: 19
+        -1, -1, -1,     0, 0,                       1, 0.5, 0,  0, -1, 0,    // Index: 16
+        -1, -1,  1,     0, 1,                       1, 0.5, 0,  0, -1, 0,    // Index: 17
+         1, -1,  1,     1, 1,                       1, 0.5, 0,  0, -1, 0,    // Index: 18
+         1, -1, -1,     1, 0,                       1, 0.5, 0,  0, -1, 0,    // Index: 19
         // Face F       // White
-        -1,  1, -1,     1, 1, 1,    0, 1, 0,     // Index: 20
-        -1,  1,  1,     1, 1, 1,    0, 1, 0,     // Index: 21
-         1,  1,  1,     1, 1, 1,    0, 1, 0,     // Index: 22
-         1,  1, -1,     1, 1, 1,    0, 1, 0      // Index: 23
+        -1,  1, -1,     0, 0,                       1, 1, 1,    0, 1, 0,     // Index: 20
+        -1,  1,  1,     0, 1,                       1, 1, 1,    0, 1, 0,     // Index: 21
+         1,  1,  1,     1, 1,                       1, 1, 1,    0, 1, 0,     // Index: 22
+         1,  1, -1,     1, 0,                       1, 1, 1,    0, 1, 0      // Index: 23
     ];
 
     var indices = [
@@ -58,9 +92,11 @@ function main() {
 
     var vertexShaderSource = `
         attribute vec3 aPosition;
+        attribute vec2 aTexCoord;
         attribute vec3 aColor;
         attribute vec3 aNormal;
         varying vec3 vPosition;
+        varying vec2 vTexCoord;
         varying vec3 vColor;
         varying vec3 vNormal;
         uniform mat4 uModel;
@@ -70,6 +106,7 @@ function main() {
             vec4 originalPosition = vec4(aPosition, 1.);
             gl_Position = uProjection * uView * uModel * originalPosition;
             vPosition = (uModel * originalPosition).xyz;
+            vTexCoord = aTexCoord;
             vColor = aColor;
             vNormal = aNormal;
         }
@@ -78,6 +115,7 @@ function main() {
     var fragmentShaderSource = `
         precision mediump float;
         varying vec3 vPosition;
+        varying vec2 vTexCoord;
         varying vec3 vColor;
         varying vec3 vNormal;
         uniform vec3 uAmbientConstant;   // Represents the light color
@@ -87,6 +125,7 @@ function main() {
         uniform mat3 uNormalModel;
         uniform vec3 uSpecularConstant; // Represents the light color
         uniform vec3 uViewerPosition;
+        uniform sampler2D uSampler;
         void main() {
             
             // Calculate the ambient component
@@ -120,7 +159,8 @@ function main() {
             vec3 phong = ambient + diffuse + specular;
 
             // Apply the shading
-            gl_FragColor = vec4(phong * vColor, 1.);
+            vec4 textureColor = texture2D(uSampler, vTextCoord);
+            gl_FragColor = vec4(phong, 1.) * textureColor;
         }
     `;
 
@@ -156,18 +196,28 @@ function main() {
         3, 
         gl.FLOAT, 
         false, 
-        9 * Float32Array.BYTES_PER_ELEMENT, 
+        11 * Float32Array.BYTES_PER_ELEMENT, 
         0
     );
     gl.enableVertexAttribArray(aPosition);
+    var aTexCoord = gl.getAttribLocation(shaderProgram, "aTexCoord");
+    gl.vertexAttribPointer(
+        aTexCoord,
+        2,
+        gl.FLOAT,
+        false, 
+        11 * Float32Array.BYTES_PER_ELEMENT,
+        3 * Float32Array.BYTES_PER_ELEMENT
+    );
+    gl.enableVertexAttribArray(aTexCoord);
     var aColor = gl.getAttribLocation(shaderProgram, "aColor");
     gl.vertexAttribPointer(
         aColor,
         3,
         gl.FLOAT,
         false, 
-        9 * Float32Array.BYTES_PER_ELEMENT,
-        3 * Float32Array.BYTES_PER_ELEMENT
+        11 * Float32Array.BYTES_PER_ELEMENT,
+        5 * Float32Array.BYTES_PER_ELEMENT
     );
     gl.enableVertexAttribArray(aColor);
     var aNormal = gl.getAttribLocation(shaderProgram, "aNormal");
@@ -176,8 +226,8 @@ function main() {
         3,
         gl.FLOAT,
         false, 
-        9 * Float32Array.BYTES_PER_ELEMENT,
-        6 * Float32Array.BYTES_PER_ELEMENT
+        11 * Float32Array.BYTES_PER_ELEMENT,
+        8 * Float32Array.BYTES_PER_ELEMENT
     );
     gl.enableVertexAttribArray(aNormal);
 
@@ -306,21 +356,31 @@ function main() {
 
     var uModel = gl.getUniformLocation(shaderProgram, "uModel");
     function render() {
+        // Transformation
         var modelMatrix = glMatrix.mat4.create();
         glMatrix.mat4.multiply(modelMatrix, modelMatrix, rotationMatrix);
         gl.uniformMatrix4fv(uModel, false, modelMatrix);
         var normalModelMatrix = glMatrix.mat3.create();
         glMatrix.mat3.normalFromMat4(normalModelMatrix, modelMatrix);
         gl.uniformMatrix3fv(uNormalModel, false, normalModelMatrix);
+        // Texture
+        gl.activeTexture(gl.TEXTURE0);  // Enable texture unit0
+        gl.bindTexture(gl.TEXTURE_2D, texture); // Bind the texture object to the target
+        // Set the texture unit 0 to the sampler
+        uSampler = gl.getUniformLocation(shaderProgram, "uSampler");
+        if (!uSampler) {
+            console.log("Failed to get the storage location of uSampler");
+        }
+        gl.uniform1i(uSampler, 0);
+        // Rendering core
         gl.enable(gl.DEPTH_TEST);
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         var primitive = gl.TRIANGLES;
         var offset = 0;
         var nVertex = indices.length;
-        gl.drawArrays(primitive, offset, nVertex);
         gl.drawElements(primitive, nVertex, gl.UNSIGNED_SHORT, offset);
         requestAnimationFrame(render);
     }
-    requestAnimationFrame(render);
+    initTextures(render);
 }
