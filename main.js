@@ -227,13 +227,19 @@ function main() {
         if (dragging) {
             var x = event.clientX;
             var y = event.clientY;
+            var xaxis = glMatrix.vec4.create();
+            var yaxis = glMatrix.vec4.create();
+            var backRotationMatrix = glMatrix.mat4.create();
+            glMatrix.mat4.invert(backRotationMatrix, rotationMatrix);
+            glMatrix.vec4.transformMat4(xaxis, glMatrix.vec4.fromValues(1, 0, 0, 0), backRotationMatrix);
+            glMatrix.vec4.transformMat4(yaxis, glMatrix.vec4.fromValues(0, 1, 0, 0), backRotationMatrix);
             // Assume that by shifting the mouse pointer by 1 pixel, we rotate the cube by 0.5 degrees
             var dx = (x - lastx) / 70;
             var dy = (y - lasty) / 70;
             var radx = glMatrix.glMatrix.toRadian(dy);
             var rady = glMatrix.glMatrix.toRadian(dx);
-            glMatrix.mat4.rotate(rotationMatrix, rotationMatrix, radx, [1, 0, 0, 0]);
-            glMatrix.mat4.rotate(rotationMatrix, rotationMatrix, rady, [0, 1, 0, 0]);
+            glMatrix.mat4.rotate(rotationMatrix, rotationMatrix, radx, xaxis);
+            glMatrix.mat4.rotate(rotationMatrix, rotationMatrix, rady, yaxis);
         }
     }
     document.addEventListener('mousedown', onMouseDown);
