@@ -201,15 +201,48 @@ function main() {
     glMatrix.mat4.perspective(perspectiveMatrix, Math.PI/3, 1.0, 0.5, 10.0);
     gl.uniformMatrix4fv(uProjection, false, perspectiveMatrix);
 
-    var freeze = false;
-    // Interactive graphics with mouse
-    function onMouseClick(event) {
-        freeze = !freeze;
+    // Interactive orbital rotation with mouse
+    var rotationMatrix = glMatrix.mat4.create();
+    var dragging, lastx, lasty;
+    function onMouseDown(event) {
+        var x = event.clientX;
+        var y = event.clientY;
+        var rect = event.target.getBoundingClientRect();
+        // When the mouse pointer is inside the frame
+        if (
+            rect.left <= x &&
+            rect.right >= x &&
+            rect.top <= y &&
+            rect.bottom >= y
+        ) {
+            dragging = true;
+            lastx = x;
+            lasty = y;
+        }
     }
-    document.addEventListener("click", onMouseClick);
+    function onMouseUp(event) {
+        dragging = false;
+    }
+    function onMouseMove(event) {
+        if (dragging) {
+            var x = event.clientX;
+            var y = event.clientY;
+            // Assume that by shifting the mouse pointer by 1 pixel, we rotate the cube by 0.5 degrees
+            var dx = (x - lastx) / 70;
+            var dy = (y - lasty) / 70;
+            var radx = glMatrix.glMatrix.toRadian(dy);
+            var rady = glMatrix.glMatrix.toRadian(dx);
+            glMatrix.mat4.rotate(rotationMatrix, rotationMatrix, radx, [1, 0, 0, 0]);
+            glMatrix.mat4.rotate(rotationMatrix, rotationMatrix, rady, [0, 1, 0, 0]);
+        }
+    }
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('mousemove', onMouseMove);
+
     // Interactive graphics with keyboard
     var cameraX = 0.0;
-    var cameraY = 2.0;
+    var cameraY = 0.0;
     var cameraZ = 5.0;
     var uView = gl.getUniformLocation(shaderProgram, "uView");
     var viewMatrix = glMatrix.mat4.create();
@@ -246,28 +279,14 @@ function main() {
     gl.uniform3fv(uSpecularConstant, [1.0, 1.0, 1.0]);  // white light
     gl.uniform3fv(uViewerPosition, [cameraX, cameraY, cameraZ]);
 
-    var speedRaw = 1;
-    var speedX = speedRaw / 600;
-    var speedY = 2 * speedRaw / 600;
-    var changeX = 0;
-    var changeY = 0;
     var uModel = gl.getUniformLocation(shaderProgram, "uModel");
     function render() {
-        if (!freeze) {  // If it is not freezing, then animate the rectangle
-            if (changeX >= 0.5 || changeX <= -0.5) speedX = -speedX;
-            if (changeY >= 0.5 || changeY <= -0.5) speedY = -speedY;
-            changeX = changeX + speedX;
-            changeY = changeY + speedY;
-            var modelMatrix = glMatrix.mat4.create();
-            // glMatrix.mat4.scale(modelMatrix, modelMatrix, [changeY, changeY, changeY]);
-            glMatrix.mat4.rotate(modelMatrix, modelMatrix, changeX, [0.0, 0.0, 1.0]);   // Rotation about Z axis
-            glMatrix.mat4.rotate(modelMatrix, modelMatrix, changeY * 2.0, [0.0, 1.0, 0.0]);   // Rotation about Y axis
-            glMatrix.mat4.translate(modelMatrix, modelMatrix, [changeX, changeY, 0.0]);
-            gl.uniformMatrix4fv(uModel, false, modelMatrix);
-            var normalModelMatrix = glMatrix.mat3.create();
-            glMatrix.mat3.normalFromMat4(normalModelMatrix, modelMatrix);
-            gl.uniformMatrix3fv(uNormalModel, false, normalModelMatrix);
-        }
+        var modelMatrix = glMatrix.mat4.create();
+        glMatrix.mat4.multiply(modelMatrix, modelMatrix, rotationMatrix);
+        gl.uniformMatrix4fv(uModel, false, modelMatrix);
+        var normalModelMatrix = glMatrix.mat3.create();
+        glMatrix.mat3.normalFromMat4(normalModelMatrix, modelMatrix);
+        gl.uniformMatrix3fv(uNormalModel, false, normalModelMatrix);
         gl.enable(gl.DEPTH_TEST);
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
