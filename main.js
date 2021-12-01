@@ -159,7 +159,7 @@ function main() {
             vec3 phong = ambient + diffuse + specular;
 
             // Apply the shading
-            vec4 textureColor = texture2D(uSampler, vTextCoord);
+            vec4 textureColor = texture2D(uSampler, vTexCoord);
             gl_FragColor = vec4(phong, 1.) * textureColor;
         }
     `;
